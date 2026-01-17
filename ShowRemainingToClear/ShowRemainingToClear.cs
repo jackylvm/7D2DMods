@@ -56,22 +56,63 @@ namespace ShowRemainingToClear
                 //var spawnPointList = AccessTools.Field(typeof(SleeperVolume), "spawnPointList");
 
                 int left = 0;
+                int zombiesMin = 0;
+                int zombiesMax = 0;
                 foreach (var sed in QuestEventManager.Current.SleeperVolumeUpdateDictionary.Values)
                 {
                     if (sed.EntityList.Exists(e => GameManager.Instance.World.GetEntity(e) is EntityPlayerLocal))
                     {
                         left = sed.SleeperVolumes.Count();
+                        foreach (var sv in sed.SleeperVolumes)
+                        {
+                            float num = 1f;
+                            if (sv.prefabInstance != null)
+                            {
+                                num = ((sv.prefabInstance.LastQuestClass == null) ? 1f : sv.prefabInstance.LastQuestClass.SpawnMultiplier);
+                                byte difficultyTier = sv.prefabInstance.prefab.DifficultyTier;
+                                num *= (((int)difficultyTier < SleeperVolume.difficultyTierScale.Length) ? SleeperVolume.difficultyTierScale[(int)difficultyTier] : SleeperVolume.difficultyTierScale[SleeperVolume.difficultyTierScale.Length - 1]);
+                                if (sv.prefabInstance.LastRefreshType.Test_AnySet(QuestEventManager.banditTag))
+                                {
+                                    num = 0.2f;
+                                }
+                            }
+                            int min;
+                            int max;
+                            if(sv.spawnCountMin < 0 || sv.spawnCountMax < 0)
+                            {
+                                min = 5;
+                                max = 6;
+                            }
+                            else
+                            {
+                                min = (int)Math.Floor((double)sv.spawnCountMin);
+                                max = (int)Math.Ceiling((double)sv.spawnCountMax);
+                                if (min == 0)
+                                    min = 1;
+                                if (max == 0)
+                                    max = 1;
+                            }
+                            zombiesMin += min;
+                            zombiesMax += max;
+                        }
                         break;
                     }
                 }
                 if (left <= 0)
                     return true;
-
-                value = string.Format(config.remainingText, __instance.QuestObjective.Description, left);
+                if (config.showZombieCount)
+                {
+                    value = string.Format(config.remainingTextWithZombiesTemplate, __instance.QuestObjective.Description, string.Format(left == 1 ? config.oneArea : config.xAreas, left), string.Format(zombiesMax == 1 ? config.oneZombie : config.xZombies, zombiesMin == zombiesMax ? zombiesMax+"" : $"{zombiesMin}-{zombiesMax}"));
+                }
+                else
+                {
+                    value = string.Format(config.remainingText, __instance.QuestObjective.Description, left);
+                }
                 return false;
             }
         }
-        //[HarmonyPatch(typeof(SleeperEventData), nameof(SleeperEventData.Update))]
+        /*
+        [HarmonyPatch(typeof(SleeperEventData), nameof(SleeperEventData.Update))]
         public static class SleeperEventData_Update_Patch
         {
             public static void Postfix(SleeperEventData __instance)
@@ -95,6 +136,6 @@ namespace ShowRemainingToClear
                 }
             }
         }
-
+        */
     }
 }

@@ -16,9 +16,6 @@ namespace AdvancedCompassMarkers
         public static ModConfig config;
         public static AdvancedCompassMarkers context;
         public static Mod mod;
-        public static bool hidingItem;
-        private static Transform holdingModel;
-        private static int holdingModelIndex;
         public void InitMod(Mod modInstance)
         {
             context = this;
@@ -38,16 +35,43 @@ namespace AdvancedCompassMarkers
             {
                 if (!config.modEnabled)
                     return;
-                var minScale = config.defaultMin;
-                var maxScale = config.defaultMax;
-                var distance = Mathf.Clamp(_distance, config.minDistance, config.maxDistance);
-                var closeness = config.maxDistance - distance; 
-                float scale = minScale + closeness / (config.maxDistance - config.minDistance) * (maxScale - minScale);
-                __result *= scale;
+                NavObjectCompassSettings currentCompassSettings = __instance.CurrentCompassSettings;
+                string text = __instance.GetSpriteName(currentCompassSettings);
+                if(!config.customMinMax.TryGetValue(text, out var settings))
+                {
+                    settings = new MinMaxSettings();
+                    config.customMinMax[text] = settings;
+                    SaveConfig();
+                }
+                var minDistance = settings.minDistance >= 0 ? settings.minDistance : config.defaultMinDistance;
+                var maxDistance = settings.maxDistance >= 0 ? settings.maxDistance : config.defaultMaxDistance;
+                var minScale = settings.minScale >= 0 ? settings.minScale : config.defaultMinScale;
+                var maxScale = settings.maxScale >= 0 ? settings.maxScale : config.defaultMaxScale;
+                var distance = Mathf.Clamp(_distance, minDistance, maxDistance);
+                var closeness = maxDistance - distance; 
+
+                float scale = minScale + closeness / (maxDistance - minDistance) * (maxScale - minScale);
+                __result = scale;
             }
         }
 
-        public void LoadConfig()
+        [HarmonyPatch(typeof(GameManager), "Update")]
+        public static class GameManager_Update_Patch
+        {
+
+            public static void Postfix(GameManager __instance, World ___m_World, GUIWindowManager ___windowManager)
+            {
+                if (!config.modEnabled || GameManager.Instance.isAnyCursorWindowOpen())
+                    return;
+
+                if (AedenthornUtils.CheckKeyDown(config.reloadKey))
+                {
+                    Dbgl($"Pressed reload key");
+                    LoadConfig();
+                }
+            }
+        }
+        public static void LoadConfig()
         {
             var path = Path.Combine(Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location), "config.json");
             if (!File.Exists(path))
@@ -58,22 +82,12 @@ namespace AdvancedCompassMarkers
             {
                 config = JsonConvert.DeserializeObject<ModConfig>(File.ReadAllText(path));
             }
-            if(config.customMin == null)
-            {
-                config.customMin = new Dictionary<string, float>();
-                foreach(var e in Enum.GetNames(typeof(EnumMapObjectType)))
-                {
-                    config.customMin[e] = 0;
-                }
-            }
-            if(config.customMax == null)
-            {
-                config.customMax = new Dictionary<string, float>();
-                foreach(var e in Enum.GetNames(typeof(EnumMapObjectType)))
-                {
-                    config.customMax[e] = 0;
-                }
-            }
+            File.WriteAllText(path, JsonConvert.SerializeObject(config, Formatting.Indented));
+        }
+
+        public static void SaveConfig()
+        {
+            var path = Path.Combine(Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location), "config.json");
             File.WriteAllText(path, JsonConvert.SerializeObject(config, Formatting.Indented));
         }
 

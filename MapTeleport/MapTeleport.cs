@@ -26,8 +26,8 @@ namespace MapTeleport
             harmony.PatchAll(Assembly.GetExecutingAssembly());
 
         }
-        [HarmonyPatch(typeof(World), nameof(World.SetupTraders))]
-        static class World_SetupTraders_Patch
+        [HarmonyPatch(typeof(GameModeAbstract), nameof(GameModeAbstract.Init))]
+        static class GameModeAbstract_Init_Patch
         {
 
             static void Postfix()
@@ -35,7 +35,7 @@ namespace MapTeleport
                 if (!config.modEnabled || GameStats.GetBool(EnumGameStats.IsTeleportEnabled))
                     return;
                 Dbgl("Enabling teleport");
-                GameStats.SetObject(EnumGameStats.IsTeleportEnabled, true);
+                GameStats.Set(EnumGameStats.IsTeleportEnabled, true);
             }
         }
         
@@ -43,11 +43,45 @@ namespace MapTeleport
         static class XUiC_MapArea_teleportPlayerOnMap_Patch
         {
 
-            static void Postfix()
+            static void Prefix(XUiC_MapArea __instance, Vector3 _screenPosition)
             {
                 if (!config.modEnabled)
                     return;
-                LocalPlayerUI.GetUIForPlayer(GameManager.Instance.World.GetPrimaryPlayer()).windowManager.CloseAllOpenWindows(null, false);
+                Vector3 playerDest = __instance.screenPosToWorldPos(_screenPosition, false);
+                if(DroneManager.Instance?.dronesActive != null)
+                {
+                    foreach (var d in DroneManager.Instance.dronesActive)
+                    {
+                        try
+                        {
+                            if (d.belongsToPlayerId(__instance.localPlayer.entityId))
+                            {
+                                Vector3 posDiff = (d.position - __instance.localPlayer.position);
+                                if (posDiff.magnitude > d.FollowDistance)
+                                {
+                                    if (config.forceDroneToPlayer)
+                                    {
+                                        posDiff.Normalize();
+                                        posDiff *= d.FollowDistance * 0.75f;
+                                        if(posDiff.y < 0)
+                                        {
+                                            posDiff.y = 0;
+                                        }
+                                    }
+                                    else
+                                    {
+                                        continue;
+                                    }
+                                }
+                                Vector3 vector = playerDest + posDiff;
+                                d.teleportToPosition(vector);
+                            }
+                        }
+                        catch { }
+                    }
+                }
+
+                LocalPlayerUI.GetUIForPlayer(__instance.xui.playerUI.entityPlayer).windowManager.CloseAllOpenWindows(null, false);
 
             }
         }

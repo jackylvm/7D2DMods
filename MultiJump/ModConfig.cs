@@ -1,10 +1,12 @@
 ﻿
-namespace MapTeleport
+using System.Collections.Generic;
+
+namespace MultiJump
 {
     public class ModConfig
     {
         public bool modEnabled = true;
         public bool isDebug = true;
-        public bool forceDroneToPlayer = true;
+        public string reloadKey = "end";
     }
 }

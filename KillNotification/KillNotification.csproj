@@ -8,6 +8,9 @@
     <Compile Include="..\AedenthornUtils\AedenthornUtils.cs" Link="AedenthornUtils.cs" />
   </ItemGroup>
   <ItemGroup>
+    <PackageReference Include="Lib.Harmony" Version="2.4.1" />
+  </ItemGroup>
+  <ItemGroup>
     <Compile Update="KillNotification.cs">
       <CopyToOutputDirectory>Never</CopyToOutputDirectory>
     </Compile>

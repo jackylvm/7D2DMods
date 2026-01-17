@@ -4,4 +4,7 @@
   </PropertyGroup>
   <Import Project="$(SolutionDir)\solution_private.targets" />
   <Import Project="$(SolutionDir)\solution.targets" />
+  <ItemGroup>
+    <PackageReference Include="Lib.Harmony" Version="2.4.1" />
+  </ItemGroup>
 </Project>

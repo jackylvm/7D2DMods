@@ -11,6 +11,9 @@
     <Content Include="bin\Debug\net480\Config\XUi\windows.xml" />
   </ItemGroup>
   <ItemGroup>
+    <PackageReference Include="Lib.Harmony" Version="2.4.1" />
+  </ItemGroup>
+  <ItemGroup>
     <None Update="Config\XUi\windows.xml">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>

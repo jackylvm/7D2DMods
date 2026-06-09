@@ -83,6 +83,16 @@
       <HintPath>$(ManagedDataPath)\netstandard.dll</HintPath>
       <Private>False</Private>
     </Reference>
+    <Reference Include="loglibrary">
+      <SpecificVersion>False</SpecificVersion>
+      <HintPath>$(ManagedDataPath)\LogLibrary.dll</HintPath>
+      <Private>False</Private>
+    </Reference>
+    <Reference Include="mscorlib">
+      <SpecificVersion>False</SpecificVersion>
+      <HintPath>$(ManagedDataPath)\mscorlib.dll</HintPath>
+      <Private>False</Private>
+    </Reference>
   </ItemGroup>
 
   <!-- Add Unity references -->
@@ -215,11 +225,6 @@
     <Reference Include="UnityEngine.AssetBundleModule">
       <SpecificVersion>False</SpecificVersion>
       <HintPath>$(UnityPath)\UnityEngine.AssetBundleModule.dll</HintPath>
-      <Private>False</Private>
-    </Reference>
-    <Reference Include="mscorlib">
-      <SpecificVersion>False</SpecificVersion>
-      <HintPath>$(ManagedDataPath)\mscorlib.dll</HintPath>
       <Private>False</Private>
     </Reference>
   </ItemGroup>
